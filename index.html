@@ -107,6 +107,13 @@
                 <button onclick="runTool('behavior', 'behaviorInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
                 <div id="behaviorResult" class="mt-2"></div>
             </div>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">Chat Behavior Analyzer</h3>
+                <p class="mb-4">Analyze chat for suspicious behavior.</p>
+                <textarea id="chatInput" placeholder="Enter Chat Messages (one per line)" class="w-full p-2 mb-2 bg-gray-700 rounded h-24"></textarea>
+                <button onclick="runTool('chat', 'chatInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="chatResult" class="mt-2"></div>
+            </div>
         </div>
     </section>
 
@@ -175,6 +182,50 @@
                 def monitor_behavior(actions):
                     threshold = 50
                     return "Suspicious" if actions > threshold else "Normal", actions * 2
+
+                def analyze_chat(chat):
+                    lines = chat.split('\\n')
+                    if not lines or all(line.strip() == '' for line in lines):
+                        return "Empty", 0
+                    score = 0
+                    suspicious_words = ["urgent", "click", "free", "win", "password", "login", "bank"]
+                    aggressive_words = ["now", "immediately", "hurry", "do it"]
+                    total_lines = len([line for line in lines if line.strip()])
+                    suspicious_count = 0
+                    aggressive_count = 0
+                    total_words = 0
+                    unique_words = set()
+                    for line in lines:
+                        if not line.strip():
+                            continue
+                        words = line.lower().split()
+                        total_words += len(words)
+                        unique_words.update(words)
+                        suspicious_count += sum(1 for word in suspicious_words if word in line.lower())
+                        aggressive_count += sum(1 for word in aggressive_words if word in line.lower())
+                    if total_lines <= 5:
+                        score += 20
+                    else:
+                        score += 5
+                    if suspicious_count == 0:
+                        score += 30
+                    else:
+                        score -= suspicious_count * 5
+                    if aggressive_count == 0:
+                        score += 20
+                    else:
+                        score -= aggressive_count * 5
+                    if total_words > 10:
+                        word_diversity = len(unique_words) / total_words
+                        if word_diversity < 0.5:
+                            score -= 20
+                        else:
+                            score += 20
+                    avg_line_length = sum(len(line) for line in lines if line.strip()) / total_lines
+                    if avg_line_length < 50:
+                        score += 10
+                    score = max(0, min(100, score))
+                    return "Normal" if score > 50 else "Suspicious", score
             `);
         }
 
@@ -203,6 +254,7 @@
                 case 'vuln': [result, score] = await pyodide.runPythonAsync(`scan_vuln("${input}")`); break;
                 case 'ddos': [result, score] = await pyodide.runPythonAsync(`alert_ddos(${input})`); break;
                 case 'behavior': [result, score] = await pyodide.runPythonAsync(`monitor_behavior(${input})`); break;
+                case 'chat': [result, score] = await pyodide.runPythonAsync(`analyze_chat("${input.replace(/\n/g, '\\n')}")`); break;
             }
             document.getElementById(`${tool}Result`).innerHTML = `Result: ${result}, Score: ${score}`;
         }
@@ -216,6 +268,7 @@
 
             let score = 0;
             let report = "";
+            const apiKey = "YOUR_GOOGLE_SAFE_BROWSING_API_KEY"; // Replace with your free API key
 
             if (url.startsWith("https://")) {
                 score += 40;
@@ -225,20 +278,61 @@
             }
 
             try {
-                const sslResponse = await fetch(`https://api.ssllabs.com/api/v3/analyze?host=${url.split('/')[2]}`, { mode: 'cors' });
-                const sslData = await sslResponse.json();
-                if (sslData.status === "READY" && sslData.endpoints[0].grade[0] === "A") {
+                const response = await fetch(
+                    `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${apiKey}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            client: { clientId: "CyberTrust", clientVersion: "1.0" },
+                            threatInfo: {
+                                threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE"],
+                                platformTypes: ["ANY_PLATFORM"],
+                                threatEntryTypes: ["URL"],
+                                threatEntries: [{ url }]
+                            }
+                        })
+                    }
+                );
+                const data = await response.json();
+                if (!data.threatMatches) {
                     score += 30;
-                    report += "✅ Strong SSL (30 points)<br>";
+                    report += "✅ Safe Browsing: No threats found (30 points)<br>";
                 } else {
-                    report += "⚠️ Weak SSL (0 points)<br>";
+                    report += "⚠️ Safe Browsing: Threats detected (0 points)<br>";
                 }
             } catch (e) {
-                report += "⚠️ SSL check failed (0 points)<br>";
+                report += "⚠️ Safe Browsing check failed, using fallback logic...<br>";
+                const suspiciousKeywords = ["login", "bank", "secure", "update", "password", "verify", "account"];
+                let keywordFound = false;
+                for (let keyword of suspiciousKeywords) {
+                    if (url.toLowerCase().includes(keyword)) {
+                        keywordFound = true;
+                        break;
+                    }
+                }
+                if (!keywordFound) {
+                    score += 20;
+                    report += "✅ Fallback: No suspicious keywords (20 points)<br>";
+                } else {
+                    report += "⚠️ Fallback: Suspicious keywords found (0 points)<br>";
+                }
             }
 
-            score += 30; // Dummy Safe Browsing
-            report += "✅ Safe Browsing (30 points)<br>";
+            if (url.length < 30) {
+                score += 20;
+                report += "✅ Short URL (20 points)<br>";
+            } else {
+                report += "⚠️ Long URL (0 points)<br>";
+            }
+
+            const domainParts = (url.split('/')[2] || url).split('.');
+            if (domainParts.length <= 3) {
+                score += 10;
+                report += "✅ Few subdomains (10 points)<br>";
+            } else {
+                report += "⚠️ Multiple subdomains (0 points)<br>";
+            }
 
             document.getElementById('result').innerHTML = `Your CyberTrust Score: <b>${score}/100</b><br>${report}`;
         }
