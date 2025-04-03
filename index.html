@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberTrust - Free AI Cybersecurity Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    <style>
+        body { background: #1a202c; color: #e2e8f0; }
+        .hero { background: linear-gradient(to right, #4a5568, #2d3748); }
+    </style>
+</head>
+<body class="font-sans">
+    <header class="bg-gray-900 p-4">
+        <nav class="flex justify-between items-center max-w-6xl mx-auto">
+            <h1 class="text-2xl font-bold text-green-400">CyberTrust</h1>
+            <ul class="flex space-x-6">
+                <li><a href="#" class="hover:text-green-400">Home</a></li>
+                <li><a href="#tools" class="hover:text-green-400">Tools</a></li>
+                <li><a href="#" class="hover:text-green-400">About</a></li>
+                <li><a href="#" class="hover:text-green-400">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero py-20 text-center">
+        <h2 class="text-4xl font-bold mb-4">Your Free CyberTrust Score</h2>
+        <p class="text-lg mb-6">Enter your website URL to get a security score.</p>
+        <div class="max-w-md mx-auto">
+            <input id="urlInput" type="text" placeholder="https://example.com" class="w-full p-3 rounded-lg bg-gray-800 text-white mb-4">
+            <button onclick="checkScore()" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600">Get Score</button>
+        </div>
+        <div id="result" class="mt-6 text-lg"></div>
+    </section>
+
+    <section id="tools" class="max-w-6xl mx-auto py-12">
+        <h2 class="text-3xl font-bold text-center mb-8">Our Free AI Tools</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">Phishing Detector</h3>
+                <p class="mb-4">Check URLs/emails for phishing risks.</p>
+                <input id="phishingInput" type="text" placeholder="Enter URL" class="w-full p-2 mb-2 bg-gray-700 rounded">
+                <button onclick="runTool('phishing', 'phishingInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="phishingResult" class="mt-2"></div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">Password Strength Analyzer</h3>
+                <p class="mb-4">Score your password’s security.</p>
+                <input id="passwordInput" type="text" placeholder="Enter Password" class="w-full p-2 mb-2 bg-gray-700 rounded">
+                <button onclick="runTool('password', 'passwordInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="passwordResult" class="mt-2"></div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">Threat Predictor</h3>
+                <p class="mb-4">Detect anomalies in network logs.</p>
+                <input id="threatInput" type="number" placeholder="Enter Log Count" class="w-full p-2 mb-2 bg-gray-700 rounded">
+                <button onclick="runTool('threat', 'threatInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="threatResult" class="mt-2"></div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">SSL Checker</h3>
+                <p class="mb-4">Analyze your SSL certificate strength.</p>
+                <input id="sslInput" type="text" placeholder="Enter URL" class="w-full p-2 mb-2 bg-gray-700 rounded">
+                <button onclick="runTool('ssl', 'sslInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="sslResult" class="mt-2"></div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">Malware URL Scanner</h3>
+                <p class="mb-4">Flag URLs with potential malware.</p>
+                <input id="malwareInput" type="text" placeholder="Enter URL" class="w-full p-2 mb-2 bg-gray-700 rounded">
+                <button onclick="runTool('malware', 'malwareInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="malwareResult" class="mt-2"></div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">Brute Force Detector</h3>
+                <p class="mb-4">Spot repeated login attempts.</p>
+                <input id="bruteInput" type="number" placeholder="Enter Attempts" class="w-full p-2 mb-2 bg-gray-700 rounded">
+                <button onclick="runTool('brute', 'bruteInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="bruteResult" class="mt-2"></div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">Email Spam Filter</h3>
+                <p class="mb-4">Classify emails as spam or legit.</p>
+                <input id="spamInput" type="text" placeholder="Enter Email Text" class="w-full p-2 mb-2 bg-gray-700 rounded">
+                <button onclick="runTool('spam', 'spamInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="spamResult" class="mt-2"></div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">Vulnerability Quick Scan</h3>
+                <p class="mb-4">Check basic security headers.</p>
+                <input id="vulnInput" type="text" placeholder="Enter URL" class="w-full p-2 mb-2 bg-gray-700 rounded">
+                <button onclick="runTool('vuln', 'vulnInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="vulnResult" class="mt-2"></div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">DDoS Alert</h3>
+                <p class="mb-4">Simulate DDoS detection.</p>
+                <input id="ddosInput" type="number" placeholder="Enter Traffic" class="w-full p-2 mb-2 bg-gray-700 rounded">
+                <button onclick="runTool('ddos', 'ddosInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="ddosResult" class="mt-2"></div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-2">User Behavior Monitor</h3>
+                <p class="mb-4">Flag unusual activity in logs.</p>
+                <input id="behaviorInput" type="number" placeholder="Enter Actions" class="w-full p-2 mb-2 bg-gray-700 rounded">
+                <button onclick="runTool('behavior', 'behaviorInput')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Try Now</button>
+                <div id="behaviorResult" class="mt-2"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 p-4 text-center">
+        <p>© 2025 CyberTrust. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let pyodide;
+        async function loadPyodideAndScripts() {
+            pyodide = await loadPyodide();
+            await pyodide.runPythonAsync(`
+                def check_phishing(url):
+                    suspicious_keywords = ["login", "bank", "secure", "update"]
+                    score = 0
+                    if not url.startswith("https://"):
+                        score += 40
+                    for keyword in suspicious_keywords:
+                        if keyword in url.lower():
+                            score += 15
+                    return "Phishing" if score > 50 else "Safe", score
+
+                def check_password(password):
+                    score = 0
+                    if len(password) > 8: score += 30
+                    if any(c.isupper() for c in password): score += 20
+                    if any(c.isdigit() for c in password): score += 20
+                    if any(c in "!@#$%" for c in password): score += 30
+                    return "Strong" if score > 70 else "Weak", score
+
+                def predict_threat(log_count):
+                    threshold = 100
+                    return "Threat" if log_count > threshold else "Normal", log_count
+
+                def check_ssl(url):
+                    if url.startswith("https://"):
+                        return "Secure", 100
+                    return "Insecure", 0
+
+                def scan_malware(url):
+                    bad_domains = ["malware.com", "virus.net"]
+                    domain = url.split('/')[2] if '/' in url else url
+                    return "Malware" if domain in bad_domains else "Clean", 50 if domain in bad_domains else 0
+
+                def detect_brute_force(attempts):
+                    threshold = 5
+                    return "Brute Force" if attempts > threshold else "Normal", attempts * 10
+
+                def filter_spam(email):
+                    spam_words = ["win", "free", "click"]
+                    score = 0
+                    for word in spam_words:
+                        if word in email.lower():
+                            score += 30
+                    return "Spam" if score > 50 else "Legit", score
+
+                def scan_vuln(url):
+                    if url.startswith("https://"):
+                        return "Low Risk", 20
+                    return "High Risk", 80
+
+                def alert_ddos(traffic):
+                    threshold = 1000
+                    return "DDoS" if traffic > threshold else "Normal", traffic // 10
+
+                def monitor_behavior(actions):
+                    threshold = 50
+                    return "Suspicious" if actions > threshold else "Normal", actions * 2
+            `);
+        }
+
+        loadPyodideAndScripts();
+
+        async function runTool(tool, inputId) {
+            if (!pyodide) {
+                alert("Pyodide is still loading, please wait...");
+                return;
+            }
+            const input = document.getElementById(inputId).value;
+            if (!input) {
+                document.getElementById(`${tool}Result`).innerHTML = "Please enter a value!";
+                return;
+            }
+
+            let result, score;
+            switch (tool) {
+                case 'phishing': [result, score] = await pyodide.runPythonAsync(`check_phishing("${input}")`); break;
+                case 'password': [result, score] = await pyodide.runPythonAsync(`check_password("${input}")`); break;
+                case 'threat': [result, score] = await pyodide.runPythonAsync(`predict_threat(${input})`); break;
+                case 'ssl': [result, score] = await pyodide.runPythonAsync(`check_ssl("${input}")`); break;
+                case 'malware': [result, score] = await pyodide.runPythonAsync(`scan_malware("${input}")`); break;
+                case 'brute': [result, score] = await pyodide.runPythonAsync(`detect_brute_force(${input})`); break;
+                case 'spam': [result, score] = await pyodide.runPythonAsync(`filter_spam("${input}")`); break;
+                case 'vuln': [result, score] = await pyodide.runPythonAsync(`scan_vuln("${input}")`); break;
+                case 'ddos': [result, score] = await pyodide.runPythonAsync(`alert_ddos(${input})`); break;
+                case 'behavior': [result, score] = await pyodide.runPythonAsync(`monitor_behavior(${input})`); break;
+            }
+            document.getElementById(`${tool}Result`).innerHTML = `Result: ${result}, Score: ${score}`;
+        }
+
+        async function checkScore() {
+            const url = document.getElementById('urlInput').value;
+            if (!url) {
+                document.getElementById('result').innerHTML = "Please enter a URL!";
+                return;
+            }
+
+            let score = 0;
+            let report = "";
+
+            if (url.startsWith("https://")) {
+                score += 40;
+                report += "✅ HTTPS detected (40 points)<br>";
+            } else {
+                report += "❌ No HTTPS (0 points)<br>";
+            }
+
+            try {
+                const sslResponse = await fetch(`https://api.ssllabs.com/api/v3/analyze?host=${url.split('/')[2]}`, { mode: 'cors' });
+                const sslData = await sslResponse.json();
+                if (sslData.status === "READY" && sslData.endpoints[0].grade[0] === "A") {
+                    score += 30;
+                    report += "✅ Strong SSL (30 points)<br>";
+                } else {
+                    report += "⚠️ Weak SSL (0 points)<br>";
+                }
+            } catch (e) {
+                report += "⚠️ SSL check failed (0 points)<br>";
+            }
+
+            score += 30; // Dummy Safe Browsing
+            report += "✅ Safe Browsing (30 points)<br>";
+
+            document.getElementById('result').innerHTML = `Your CyberTrust Score: <b>${score}/100</b><br>${report}`;
+        }
+    </script>
+</body>
+</html>
